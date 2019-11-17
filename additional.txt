@@ -1,0 +1,91 @@
+mongo 192.168.17.17:27019 -u mongo-admin -p --authenticationDatabase admin
+mongo 192.168.17.18:27019 -u mongo-admin -p --authenticationDatabase admin
+
+
+rs.initiate( { _id: "configReplSet", configsvr: true, members: [ { _id: 0, host: "192.168.17.17:27019" }, { _id: 1, host: "192.168.17.18:27019" } ] } )
+
+
+# where to write logging data.
+systemLog:  
+  destination: file
+  logAppend: true
+  path: /var/log/mongodb/mongos.log
+
+# network interfaces
+net:
+  port: 27017
+  bindIp: 192.0.17.16
+
+sharding:
+  configDB: configReplSet/192.168.17.17:27019,192.168.17.18:27019
+
+
+[Unit]
+Description=Mongo Cluster Router
+After=network.target
+
+[Service]
+User=mongodb
+Group=mongodb
+ExecStart=/usr/bin/mongos --config /etc/mongos.conf
+# file size
+LimitFSIZE=infinity
+# cpu time
+LimitCPU=infinity
+# virtual memory size
+LimitAS=infinity
+# open files
+LimitNOFILE=64000
+# processes/threads
+LimitNPROC=64000
+# total threads (user+kernel)
+TasksMax=infinity
+TasksAccounting=false
+
+[Install]
+WantedBy=multi-user.target
+
+bindIp: 192.168.17.19
+sharding:
+  clusterRole: "shardsvr"
+sudo systemctl start mongod
+
+bindIp: 192.168.17.20
+sudo systemctl start mongod
+
+bindIp: 192.168.17.21
+sudo systemctl start mongod
+
+sudo systemctl status mongod
+
+
+mongo 192.168.17.16:27017 -u mongo-admin -ppassword --authenticationDatabase admin
+
+mongo 192.168.17.19:27017 -u mongo-admin -ppassword --authenticationDatabase admin
+mongo 192.168.17.20:27017 -u mongo-admin -ppassword --authenticationDatabase admin
+mongo 192.168.17.21:27017 -u mongo-admin -ppassword --authenticationDatabase admin
+
+
+sh.addShard( "192.168.17.19:27017" )
+sh.addShard( "192.168.17.20:27017" )
+sh.addShard( "192.168.17.21:27017" )
+
+use carDB
+
+sh.enableSharding("carDB")
+
+db.listingCollection.ensureIndex( { _id : "hashed" } )
+
+sh.shardCollection( "carDB.listingCollection", { "_id" : "hashed" } )
+
+
+
+use config
+
+db.databases.find()
+
+
+
+mongoimport --db carDB --collection listingCollection -h 192.168.17.16:27017 -u mongo-admin --authenticationDatabase admin --type csv --headerline --file /vagrant/true_car_listings.csv
+
+db.listingCollection.getShardDistribution()
