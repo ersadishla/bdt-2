@@ -411,7 +411,7 @@ Command yang dijalankan pada masing-masing node
 
 ### Deskripsi Aplikasi
 Untuk implementasi CRUD menggunakan web apps dan framework Laravel. Fungsionalitas aplikasi adalah melakukan CRUD dari data Anime Recommendations.  
-Untuk source code bisa diakses di : (link github)
+Untuk source code bisa diakses di : https://github.com/ersadishla/mongobdt
 
 ### Konfigurasi Aplikasi
 1. Install Package tambahan : https://github.com/jenssegers/laravel-mongodb
