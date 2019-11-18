@@ -10,7 +10,7 @@
 
 ### Detail Provision :
 
-* Spesifikasi
+* Spesifikasi  
 ![Gambar_Spesifikasi](img/specification.png)
 
 * Setting VagrantFile  
@@ -134,9 +134,15 @@ Command yang dijalankan pada masing-masing node
     # Start MongoDB
     sudo service mongod start
   ```
+  ### Setelah itu jalankan command
+  ```
+  vagrant up
+  ```
+  ![Gambar_Running](img/running.png)
 * Setting Manual  
 Command yang dijalankan pada masing-masing node  
-  ### 1. Registrasi hosts pada masing-masing node
+  ### 1. Registrasi hosts pada masing-masing node  
+  Pada file /etc/hosts
   ```sh
    192.168.17.16        mongo-query-router
    192.168.17.17        mongo-config-1
@@ -157,7 +163,7 @@ Command yang dijalankan pada masing-masing node
   db.createUser({user: "mongo-admin", pwd: "password", roles:[{role: "root", db: "admin"}]})
   ```
   ### 3. Setting Config Server
-  * Ubah /etc/mongod.conf
+  * Ubah /etc/mongod.conf pada masing-masing node
   ```
   port: 27019
   bindIp: alamat_IP
@@ -297,9 +303,12 @@ Command yang dijalankan pada masing-masing node
   ```
   ### 4. Config Node Shard
   Pada masing-masing sharding cluster
-  * Masukkan alamat IP
+  * Ubah /etc/mongod.conf pada masing-masing node
   ```
   bindIp: alamat_IP
+
+  sharding:
+    clusterRole: "shardsvr"
   ```
   Pada salah satu sharding cluster
   * Login ke query router
@@ -342,6 +351,60 @@ Command yang dijalankan pada masing-masing node
   ```
   sh.shardCollection( "namaDatabase.namaCollection", { "_id" : "hashed" } )
   ```
+  Tes menggunakan sh.status()  
+  ![Gambar_Sharding](img/sharding1.png)
 ## Menentukan Dataset
+
+  ### Batasan Dataset :  
+  * Format JSON atau CSV
+  * Ukuran > 1000 baris
+  * Import ke server MongoDB
+
+  ### Dataset yang digunakan
+  Anime Recommendations  
+  * Sumber : https://www.kaggle.com/CooperUnion/anime-recommendations-database#anime.csv
+  * Banyak baris : 12.294
+  * Banyak kolom : 7 (anime_id, name, genre, type, episodes, rating, members)
+
+  ### Import ke dalam server MongoDB  
+  Langkah-langkah
+  1. Login ke Query Router
+  ```
+  mongo 192.168.17.16:27017 -u mongo-admin -ppassword --authenticationDatabase admin
+  ```
+  2. Buat Database baru
+  ```
+  use animeDB
+  ```
+  3. Aktifkan sharding pada level Database
+  ```
+  sh.enableSharding("animeDB")
+  ```
+  4. Buat Collection baru
+  ```
+  db.animeCollect.ensureIndex( { _id : "hashed" } )
+  ```
+  5. Aktifkan sharding pada level Collection
+  ```
+  sh.shardCollection( "animeDB.animeCollect", { "_id" : "hashed" } )
+  ```
+  6. Keluar dari server MongoDB
+  ```
+  exit
+  ```
+  7. Import data ke dalam server mongoDB
+  ```
+  mongoimport --db animeDB --collection animeCollect -h 192.168.17.16:27017 -u mongo-admin --authenticationDatabase admin --type csv --headerline --file /vagrant/anime.csv
+  ```
+  8. Cek Sharding
+  ```
+  db.animeCollect.getShardDistribution()
+  ```
+  9. Hasil akhir  
+  ![Gambar_Sharding](img/sharding2.png)  
+
+  ```
+  Menunjukkan bahwa data telah diinput dan data telah ter-sharding ke 3 shard cluster
+  ```
 
 ## Implementasi Aplikasi CRUD

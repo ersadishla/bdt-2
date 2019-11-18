@@ -7,6 +7,8 @@ vagrant ssh mongo_shard_3
 vagrant ssh mongo_config_1
 vagrant ssh mongo_config_2
 
+vagrant ssh mongo_query_router
+
 vagrant
 
 mongo 192.168.17.17:27019 -u mongo-admin -ppassword --authenticationDatabase admin
