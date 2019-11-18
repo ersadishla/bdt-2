@@ -61,11 +61,6 @@ sudo systemctl status mongod
 
 mongo 192.168.17.16:27017 -u mongo-admin -ppassword --authenticationDatabase admin
 
-mongo 192.168.17.19:27017 -u mongo-admin -ppassword --authenticationDatabase admin
-mongo 192.168.17.20:27017 -u mongo-admin -ppassword --authenticationDatabase admin
-mongo 192.168.17.21:27017 -u mongo-admin -ppassword --authenticationDatabase admin
-
-
 sh.addShard( "192.168.17.19:27017" )
 sh.addShard( "192.168.17.20:27017" )
 sh.addShard( "192.168.17.21:27017" )

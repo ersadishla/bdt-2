@@ -1,0 +1,44 @@
+Login di masing masing sharding
+
+vagrant ssh mongo_shard_1
+vagrant ssh mongo_shard_2
+vagrant ssh mongo_shard_3
+
+vagrant ssh mongo_config_1
+vagrant ssh mongo_config_2
+
+vagrant
+
+mongo 192.168.17.17:27019 -u mongo-admin -ppassword --authenticationDatabase admin
+mongo 192.168.17.18:27019 -u mongo-admin -ppassword --authenticationDatabase admin
+
+sudo systemctl start mongod
+sudo systemctl start mongod
+sudo systemctl start mongod
+
+sudo systemctl status mongod
+sudo systemctl status mongod
+sudo systemctl status mongod
+
+vagrant ssh mongo_query_router
+
+mongo 192.168.17.16:27017 -u mongo-admin -ppassword --authenticationDatabase admin
+
+use animeDB
+
+sh.enableSharding("animeDB")
+
+db.animeCollect.ensureIndex( { _id : "hashed" } )
+
+sh.shardCollection( "animeDB.animeCollect", { "_id" : "hashed" } )
+
+mongoimport --db animeDB --collection animeCollect -h 192.168.17.16:27017 -u mongo-admin --authenticationDatabase admin --type csv --headerline --file /vagrant/anime.csv
+
+use animeDB
+
+db.animeCollect.getShardDistribution()
+
+
+use config
+
+db.databases.find()
